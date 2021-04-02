@@ -154,7 +154,7 @@ class GridWidget extends StatelessWidget {
       children: [
         Container(
           margin: EdgeInsets.all(5),
-            height: 800,
+            height: 500,
             width: 250,
             child: Column(
               children: [
@@ -184,11 +184,13 @@ class GridWidget extends StatelessWidget {
                           Text('\$129,000',style: TextStyle(fontSize: 18,color: Colors.red),),
                           Text(airlineName,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
                           Text(airlineHeadquarter,overflow: TextOverflow.fade),
-                          Row(
-                            children: [
-                              Icon(Icons.location_on,size: 14,),
-                              Text(airlineCountry,style: TextStyle(fontSize: 14,fontWeight: FontWeight.w400),),
-                            ],
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Icon(Icons.location_on,size: 14,),
+                                Text(airlineCountry,style: TextStyle(fontSize: 14,fontWeight: FontWeight.w400),),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -197,7 +199,6 @@ class GridWidget extends StatelessWidget {
                 ),
               ],
             ),
-
         ),
         Positioned(
           top: 10,
