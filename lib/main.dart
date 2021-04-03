@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_kado_maker_task3/modal/task_data.dart';
+import 'modal/task_data.dart';
 import 'package:http/http.dart'as http;
 void main() {
   runApp(MaterialApp(
@@ -18,11 +18,11 @@ class _TaskThreeState extends State<TaskThree> {
 
   User _user;
   bool isLoading = false;
-  int pageNumber = 4;
+  int addData = 10;
   ScrollController scrollController = ScrollController();
   Future<User> fetchData()async{
 
-    String url = 'https://api.instantwebtools.net/v1/passenger?page=' +pageNumber.toString()+ '&size=2';
+    String url = 'https://api.instantwebtools.net/v1/passenger?page=4&size= '+addData.toString()+'';
 
     var response =  await http.get(url);
     try{
@@ -39,12 +39,29 @@ class _TaskThreeState extends State<TaskThree> {
     return _user;
   }
 
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchData();
+    scrollController.addListener(() {
+      print(scrollController.position.pixels);
+      if(scrollController.position.pixels == scrollController.position.maxScrollExtent){
+        setState(() {
+          addData = addData + 2;
+        });
+        fetchData();
+      }
+    });
     print(_user);
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    scrollController.dispose();
   }
 
   @override
@@ -85,40 +102,27 @@ class _TaskThreeState extends State<TaskThree> {
               ],
             ),
             Expanded(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification scrollInfo) {
-                  if (!isLoading && scrollInfo.metrics.pixels ==
-                      scrollInfo.metrics.maxScrollExtent) {
-                    fetchData();
-                    // start loading data
-                    setState(() {
-                      isLoading = true;
-                      pageNumber = pageNumber + 1;
-                    });
-                  }
-                  return false;
-                },
-                child: _user==null?  Container(
-                  height: isLoading ? 50.0 : 0,
-                  child: Center(
-                    child: new CircularProgressIndicator(),
-                  ),
-                ): GridView.builder(
-                  shrinkWrap: true,
-                    scrollDirection: Axis.vertical,
-                    itemCount: _user.data.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2
-                    ),
-                    itemBuilder: (context,index){
-                      return GridWidget(
-                        airlineName: _user.data[index].airline.name,
-                        airlineHeadquarter: _user.data[index].airline.headQuaters,
-                        airlineCountry: _user.data[index].airline.country,
-                        image:NetworkImage(_user.data[index].airline.logo),
-                      );
-                    }
+              child: _user==null?  Container(
+                height: isLoading ? 50.0 : 0,
+                child: Center(
+                  child: new CircularProgressIndicator(),
                 ),
+              ): GridView.builder(
+                  controller: scrollController,
+                  shrinkWrap: true,
+                  scrollDirection: Axis.vertical,
+                  itemCount: _user.data.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2
+                  ),
+                  itemBuilder: (context,index){
+                    return GridWidget(
+                      airlineName: _user.data[index].airline.name,
+                      airlineHeadquarter: _user.data[index].airline.headQuaters,
+                      airlineCountry: _user.data[index].airline.country,
+                      image:NetworkImage(_user.data[index].airline.logo),
+                    );
+                  }
               ),
             ),
 
@@ -169,7 +173,7 @@ class GridWidget extends StatelessWidget {
       children: [
         Container(
           margin: EdgeInsets.all(5),
-         // height: 300,
+          // height: 300,
           width: 250,
           child: Column(
             children: [
