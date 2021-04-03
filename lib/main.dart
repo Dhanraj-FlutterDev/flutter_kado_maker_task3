@@ -3,8 +3,8 @@ import 'package:flutter_kado_maker_task3/modal/task_data.dart';
 import 'package:http/http.dart'as http;
 void main() {
   runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: TaskThree()
+      debugShowCheckedModeBanner: false,
+      home: TaskThree()
   ));
 }
 
@@ -17,16 +17,20 @@ class TaskThree extends StatefulWidget {
 class _TaskThreeState extends State<TaskThree> {
 
   User _user;
-
-  String url = 'https://api.instantwebtools.net/v1/passenger?page=3&size=2';
-
+  bool isLoading = false;
+  int pageNumber = 4;
+  ScrollController scrollController = ScrollController();
   Future<User> fetchData()async{
+
+    String url = 'https://api.instantwebtools.net/v1/passenger?page=' +pageNumber.toString()+ '&size=2';
+
     var response =  await http.get(url);
     try{
       if(response.statusCode == 200){
         final user = userFromJson(response.body);
         setState(() {
           _user = user;
+          isLoading = false;
         });
       }
     }catch(e){
@@ -40,19 +44,14 @@ class _TaskThreeState extends State<TaskThree> {
     // TODO: implement initState
     super.initState();
     fetchData();
+    print(_user);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _user == null ? Container(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      ): Container(
-        margin: EdgeInsets.only(top: 30),
-        height: MediaQuery.of(context).size.height,
-        width: MediaQuery.of(context).size.width,
+      body: Container(
+        margin: EdgeInsets.only(top: 40),
         child: Column(
           children: [
             Row(
@@ -85,28 +84,44 @@ class _TaskThreeState extends State<TaskThree> {
                 ),
               ],
             ),
-            GridView(
-              shrinkWrap: true,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 5,
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification scrollInfo) {
+                  if (!isLoading && scrollInfo.metrics.pixels ==
+                      scrollInfo.metrics.maxScrollExtent) {
+                    fetchData();
+                    // start loading data
+                    setState(() {
+                      isLoading = true;
+                      pageNumber = pageNumber + 1;
+                    });
+                  }
+                  return false;
+                },
+                child: _user==null?  Container(
+                  height: isLoading ? 50.0 : 0,
+                  child: Center(
+                    child: new CircularProgressIndicator(),
+                  ),
+                ): GridView.builder(
+                  shrinkWrap: true,
+                    scrollDirection: Axis.vertical,
+                    itemCount: _user.data.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2
+                    ),
+                    itemBuilder: (context,index){
+                      return GridWidget(
+                        airlineName: _user.data[index].airline.name,
+                        airlineHeadquarter: _user.data[index].airline.headQuaters,
+                        airlineCountry: _user.data[index].airline.country,
+                        image:NetworkImage(_user.data[index].airline.logo),
+                      );
+                    }
                 ),
-              children: [
-                GridWidget(
-                  airlineName: _user.data[0].airline.name,
-                  airlineHeadquarter: _user.data[0].airline.headQuaters,
-                  airlineCountry: _user.data[0].airline.country,
-                  image:NetworkImage(_user.data[0].airline.logo),
-                ),
-                GridWidget(
-                  airlineName: _user.data[1].airline.name,
-                  airlineHeadquarter: _user.data[1].airline.headQuaters,
-                  airlineCountry: _user.data[1].airline.country,
-                  image:NetworkImage(_user.data[1].airline.logo),
-                ),
-              ],
+              ),
             ),
+
           ],
         ),
       ),
@@ -154,51 +169,51 @@ class GridWidget extends StatelessWidget {
       children: [
         Container(
           margin: EdgeInsets.all(5),
-            height: 500,
-            width: 250,
-            child: Column(
-              children: [
-                Expanded(
-                  child: Container(
+         // height: 300,
+          width: 250,
+          child: Column(
+            children: [
+              Expanded(
+                child: Container(
                   decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: image,
-                      fit: BoxFit.fitWidth
-                    ),
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10)),
-                    color: Colors.grey
-                  ),
-                  ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(left: 10,bottom: 10),
-                      height: 100,
-                      color: Colors.white54,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text('\$129,000',style: TextStyle(fontSize: 18,color: Colors.red),),
-                          Text(airlineName,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
-                          Text(airlineHeadquarter,overflow: TextOverflow.fade),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Icon(Icons.location_on,size: 14,),
-                                Text(airlineCountry,style: TextStyle(fontSize: 14,fontWeight: FontWeight.w400),),
-                              ],
-                            ),
-                          ),
-                        ],
+                      image: DecorationImage(
+                          image: image,
+                          fit: BoxFit.fitWidth
                       ),
-                    ),
-                  ],
+                      borderRadius: BorderRadius.only(topLeft: Radius.circular(10),topRight: Radius.circular(10)),
+                      color: Colors.grey
+                  ),
                 ),
-              ],
-            ),
+              ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: EdgeInsets.only(left: 10,bottom: 10),
+                    height: 100,
+                    color: Colors.white54,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('\$129,000',style: TextStyle(fontSize: 18,color: Colors.red),),
+                        Text(airlineName,style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500),),
+                        Text(airlineHeadquarter,overflow: TextOverflow.fade),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Icon(Icons.location_on,size: 14,),
+                              Text(airlineCountry,style: TextStyle(fontSize: 14,fontWeight: FontWeight.w400),),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         Positioned(
           top: 10,
